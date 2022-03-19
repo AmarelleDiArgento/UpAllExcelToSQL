@@ -1,21 +1,27 @@
 import pandas as pd
 from pylib.file import extractDataFile
-from pylib.pySQL import dbProjCon, stringConnect, insertDataToSql
-print('Inicio!')
 
-URL = r'D:\Code\G1-14\files\\'
-FILE = 'G1-14.xlsx'
+from pylib.mod.utils import parameters, workDirectory
+from pylib.pySQL import insertDataToSql, stringConnect
 
-dbProjCon = {
-    'server': 'elt-dbproj-fca\\testing',
-    'db': 'Reports',
-    'user': 'talend',
-    'password': 'S3rvT4l3nd*',
-}
+ROOT = workDirectory()
 
-df = extractDataFile(url=URL, file=FILE, sheet="Hoja1")
-strCon = stringConnect(dbProjCon)
+ROOT = workDirectory()
+DB_CON, FILES = parameters()
 
+strCon = stringConnect(DB_CON)
 
-
-insertDataToSql(strCon, 'tmp', 'G1-14', df)
+for file in FILES:
+    url = r'{}\{}\\'.format(ROOT, file['dir'])
+    print(url)
+    df = extractDataFile(
+        url=url,
+        file=file['excel_file'],
+        sheet=file['sheet']
+    )
+    insertDataToSql(
+        srtCon=strCon,
+        schema=file['schema'],
+        table=file['table'],
+        data=df
+    )

@@ -1,14 +1,17 @@
 {
-	"dbProjReport": {
+	"db_con": {
 		"server": "elt-dbproj-fca\\testing",
 		"db": "Reports",
 		"user": "talend",
-		"password": "S3rvT4l3nd*",
-		"tables": {
-			"table": {
-				"schema": "trn",
-				"table": "table"
-			}
+		"password": "S3rvT4l3nd*"
+	},
+	"files": [
+		{
+			"dir": "files",
+			"excel_file": "G1-14 - copia.xlsx",
+			"sheet": "Hoja1",
+			"schema": "rep",
+			"table": "G1-14"
 		}
-	}
+	]
 }
