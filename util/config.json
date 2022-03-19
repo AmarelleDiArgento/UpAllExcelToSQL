@@ -1,0 +1,14 @@
+{
+	"dbProjReport": {
+		"server": "elt-dbproj-fca\\testing",
+		"db": "Reports",
+		"user": "talend",
+		"password": "S3rvT4l3nd*",
+		"tables": {
+			"table": {
+				"schema": "trn",
+				"table": "table"
+			}
+		}
+	}
+}
