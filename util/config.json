@@ -11,7 +11,9 @@
 			"excel_file": "G1-14 - copia.xlsx",
 			"sheet": "Hoja1",
 			"schema": "rep",
-			"table": "G1-14"
+			"table": "G1-14",
+			"truncate": true,
+			"index": true
 		}
 	]
 }
