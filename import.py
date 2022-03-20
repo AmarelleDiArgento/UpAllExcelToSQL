@@ -3,8 +3,8 @@ from numpy import where
 import pandas as pd
 from pylib.file import extractDataFile
 
-from pylib.mod.utils import parameters, workDirectory
-from pylib.pySQL import deleteDataToSql, insertDataToSql, stringConnect, truncateTable
+from pylib.mod.utils import excutionTime, parameters, workDirectory
+from pylib.pySQL import deleteDataToSql, insertDataToSql, insertDataToSql_Alchemy, stringConnect, truncateTable
 
 ROOT = workDirectory()
 DB_CON, FILES = parameters()
@@ -12,6 +12,7 @@ DB_CON, FILES = parameters()
 strCon = stringConnect(DB_CON)
 
 
+@excutionTime
 def run():
 
     for file in FILES:
@@ -23,7 +24,7 @@ def run():
             sheet=file['sheet']
         )
 
-        insertDataToSql(
+        insertDataToSql_Alchemy(
             strCon=strCon,
             schema=file['schema'],
             table=file['table'],
