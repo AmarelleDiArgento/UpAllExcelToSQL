@@ -1,4 +1,5 @@
 {
+	"isTest": false,
 	"db_con": {
 		"server": "elt-dbproj-fca\\testing",
 		"db": "Reports",
@@ -7,11 +8,44 @@
 	},
 	"files": [
 		{
+			"local": true,
+			"directory": false,
 			"dir": "files",
-			"excel_file": "G1-14.xlsx",
-			"sheet": "Hoja1",
+			"file": "007 Fantasy Formato Metodologia 1-1.5.xlsx",
+			"sheets": [
+				"Base"
+			],
 			"schema": "rep",
-			"table": "G1-14",
+			"table": "MET_1_1_5",
+			"truncate": true,
+			"index": true
+		},
+		{
+			"local": true,
+			"directory": false,
+			"dir": "files",
+			"file": "metodologia 2 a 1.xlsx",
+			"sheets": [
+				"Base"
+			],
+			"schema": "rep",
+			"table": "MET_2_1",
+			"truncate": true,
+			"index": true
+		},
+		{
+			"local": true,
+			"directory": true,
+			"dir": "files",
+			"regex": {
+				"content": "TENSIOMETRIA",
+				"ext": "xlsx"
+			},
+			"sheets": [
+				"Base"
+			],
+			"schema": "rep",
+			"table": "TENSIOMETRIA",
 			"truncate": true,
 			"index": true
 		}
