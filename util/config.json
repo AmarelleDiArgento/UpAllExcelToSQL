@@ -1,53 +1,83 @@
 {
 	"isTest": false,
 	"db_con": {
-		"server": "elt-dbproj-fca\\testing",
-		"db": "Reports",
-		"user": "talend",
-		"password": "S3rvT4l3nd*"
+		"server": "elt-fdim-fca",
+		"db": "Planeacion",
+		"user": "data_analysis",
+		"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361"
 	},
 	"files": [
 		{
-			"local": true,
-			"directory": false,
-			"dir": "files",
-			"file": "007 Fantasy Formato Metodologia 1-1.5.xlsx",
-			"sheets": [
-				"Base"
-			],
-			"schema": "rep",
-			"table": "MET_1_1_5",
-			"truncate": true,
-			"index": true
-		},
-		{
-			"local": true,
-			"directory": false,
-			"dir": "files",
-			"file": "metodologia 2 a 1.xlsx",
-			"sheets": [
-				"Base"
-			],
-			"schema": "rep",
-			"table": "MET_2_1",
-			"truncate": true,
-			"index": true
-		},
-		{
-			"local": true,
+			"local": false,
 			"directory": true,
-			"dir": "files",
+			"dir": "P:\\",
 			"regex": {
-				"content": "TENSIOMETRIA",
+				"content": "ppt_",
 				"ext": "xlsx"
 			},
 			"sheets": [
 				"Base"
 			],
-			"schema": "rep",
-			"table": "TENSIOMETRIA",
-			"truncate": true,
-			"index": true
+			"firstRow": 0,
+			"archive": true,
+			"schema": "tmp",
+			"table": "ppt_Excel_test",
+			"truncate": false,
+			"depureColumns": [
+				"idYear",
+				"idSemana",
+				"Finca",
+				"Origen"
+			],
+			"index": false
+		},
+		{
+			"local": false,
+			"directory": true,
+			"dir": "P:\\",
+			"regex": {
+				"content": "cor_",
+				"ext": "xlsx"
+			},
+			"sheets": [
+				"Base"
+			],
+			"firstRow": 0,
+			"archive": true,
+			"schema": "tmp",
+			"table": "cor_Excel_test",
+			"truncate": false,
+			"depureColumns": [
+				"idYear",
+				"idSemana",
+				"Finca",
+				"Origen"
+			],
+			"index": false
+		},
+		{
+			"local": false,
+			"directory": true,
+			"dir": "P:\\",
+			"regex": {
+				"content": "nof_",
+				"ext": "xlsx"
+			},
+			"sheets": [
+				"Base"
+			],
+			"firstRow": 0,
+			"archive": true,
+			"schema": "tmp",
+			"table": "nof_Excel_test",
+			"truncate": false,
+			"depureColumns": [
+				"IDYEAR",
+				"IDWEEK",
+				"Finca",
+				"Origen"
+			],
+			"index": false
 		}
 	]
 }

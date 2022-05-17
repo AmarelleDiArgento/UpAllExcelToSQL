@@ -1,13 +1,17 @@
 
-from pylib.file import blockExtractDataFile, convertXlsToCsv, createDirectory, extractDataFile, removeDirectory, removeFile, searchFilesByContentInTitle
-from pylib.mod.error import packageForFileError
-import re
 
-from pylib.mod.utils import excutionTime, parameters, workDirectory
-from pylib.pySQL import insertDataToSql_Alchemy, stringConnect
+from cmath import log
+from distutils.command.build_scripts import first_line_re
+from pandas import DataFrame
+from pylib.py_lib import blockExtractDataFile, convertXlsToCsv, createDirectory, extractDataFile, packageForFileError, removeDirectory, removeFile, searchFilesByContentInTitle
+
+
+import datetime as dt
+
+from pylib.py_lib import excutionTime, parameters, workDirectory, insertDataToSql_Alchemy, stringConnect
 
 ROOT = workDirectory()
-DB_CON, FILES, ISTEST = parameters()
+DB_CON, FILES, ISTEST = parameters(ROOT)
 
 
 strCon = stringConnect(DB_CON)
@@ -26,27 +30,40 @@ def remove_csv(csv_path):
         removeDirectory(csv_path)
 
 
-@excutionTime
-def run():
+def ajustes(df, file):
+    df['FechaProyectada'] = '1990-01-01'
+    # df.to_csv(file['dir'] + 'test.csv', encoding='utf-8', sep=';')
+    return df
+
+
+def execute_files_planning():
+    logs = ''
     try:
-        createDirectory(
-            workDirectory() + chr(92)+'Procesado' + chr(92)
-        )
 
         for file in FILES:
-
+            logs = file['logs']
             url = create_url(file)
 
             # remove_csv(file_path)
+            df = DataFrame()
+
             if file['directory']:
                 files = searchFilesByContentInTitle(
                     file_path=url,
                     parm=dict(file['regex']))
 
-                df = blockExtractDataFile(
-                    path=url,
-                    files=files,
-                    sheets=file['sheets'])
+                if len(files) > 0:
+
+                    df = blockExtractDataFile(
+                        path=url,
+                        files=files,
+                        file=file,
+                        # sheets=file['sheets'],
+                        # archive=file['archive'],
+                        # firstRow=file['firstRow'],
+                    )
+                else:
+                    print('No files found for process')
 
             else:
 
@@ -57,28 +74,44 @@ def run():
                     isTest=ISTEST
                 )
                 df = extractDataFile(
-                    file_path=file_path,
+                    path=url,
                     file=file['file'],
                     sheets=file['sheets']
                 )
 
-            insertDataToSql_Alchemy(
-                strCon=strCon,
-                schema=file['schema'],
-                table=file['table'],
-                data=df,
-                truncate=file['truncate'],
-                index=file['index']
-            )
+            print(df.shape)
+            if df.shape[0] > 0:
+                if file['regex']['content'] == 'ppt_':
+                    df = ajustes(df, file=file)
+
+                df.rename(columns={'source': 'Origen'}, inplace=True)
+                df['Origen'] = 'Usuario'
+                df['FechaEjecucion'] = dt.datetime.now().strftime('%Y-%m-%d')
+                # # df.groupby(by=).()
+                # depure(df=df, where=file['depureColumns'])
+
+                insertDataToSql_Alchemy(
+                    strCon=strCon,
+                    schema=file['schema'],
+                    table=file['table'],
+                    data=df,
+                    truncate=file['truncate'],
+                    depureColumns=file['depureColumns'],
+                    index=file['index']
+                )
 
     except (AttributeError, KeyError) as e:
         packageForFileError(
-            file_path,
+            logs,
             "Error: {}.\n".format(e),
             url
         )
 
 
+# @excutionTime
+def run():
+    # print(FILES)
+    execute_files_planning()
 
 
 if __name__ == '__main__':

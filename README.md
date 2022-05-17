@@ -30,3 +30,22 @@ $ py -m pip install --upgrade pip
 }
 
 
+{
+	"db_con": {
+		"server": "elt-dbproj-fca\\testing",
+		"db": "Reports",
+		"user": "talend",
+		"password": "S3rvT4l3nd*"
+	},
+	"files": [
+		{
+			"dir": "files",
+			"excel_file": "G1-14.xlsx",
+			"sheet": "Hoja1",
+			"schema": "rep",
+			"table": "G1-14",
+			"truncate": true,
+			"index": true
+		}
+	]
+}
