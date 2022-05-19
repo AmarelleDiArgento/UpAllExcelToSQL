@@ -1,22 +1,23 @@
 
 from importlib.metadata import files
+from importlib.resources import path
 import pandas as pd
 import datetime as dt
 
-from pylib.py_lib import excecute_query, excutionTime, insertDataToSql, insertDataToSql_Alchemy, removeColumnsIn, trimAllColumns, workDirectory, parameters, stringConnect
+from pylib.py_lib import bulkInsert, excecute_query, excutionTime, insertDataToSql, insertDataToSql_Alchemy, removeColumnsIn, trimAllColumns, workDirectory, parameters, stringConnect
 
 
 ROOT = workDirectory()
 
 
 def read_conexion(name='general'):
-    dbCon, files, is_test = parameters(
+    dbCon, files, is_test, bulk_space = parameters(
         ROOT=ROOT,
         config_file='configdb.json',
         service_name=name
     )
 
-    return (is_test, dbCon)
+    return (is_test, dbCon, bulk_space)
 
 
 def add_new_element(strCon, schema, table, df_new_elements,
@@ -50,50 +51,50 @@ def add_new_element(strCon, schema, table, df_new_elements,
 
 @excutionTime
 def run():
-    is_test, ServDB12_DB_FDIM_Reports = read_conexion(
+    is_test_DB12, ServDB12_DB_FDIM_Reports, bulk_space = read_conexion(
         'ServDB12_DB_FDIM_Reports')
     str_con_FDIM_Reports = stringConnect(ServDB12_DB_FDIM_Reports)
 
-    is_test, ServFDIM_DB_Planeacion = read_conexion(
+    is_test_FDIM, ServFDIM_DB_Planeacion, bulk_space_FDIM = read_conexion(
         'ServFDIM_DB_Planeacion')
     str_con_FDIM_Planeacion = stringConnect(ServFDIM_DB_Planeacion)
 
-    # desde = '2022-01-01'
-    # hasta = '2022-05-20'
-    desde = '2022-05-19'
-    hasta = '2022-05-19'
+    desde = '2022-01-01'
+    hasta = '2022-05-20'
+    # desde = '2022-05-19'
+    # hasta = '2022-05-19'
 
     query = '''
 
-				SELECT
-					[IdTipoMovimiento]
-					,[Tipo]
-					,[FechaJornada]
-					,[idPostcosecha]
-					,[idBloque]
-					,[idVariedad]
-					,[TipoCorte]
-					,SUM([TotalTallos]) Tallos
-					,DATEPART(HOUR, [FechaSistema]) Hora
-					,[Marca]
-					,[idGradodeCalidad]
-					,GETDATE() [FechaEjecucion]
-				FROM [FDIM_Reports].[dbo].[MovimientoInventario] WITH(NOLOCK)
-				WHERE 	IDTIPOMOVIMIENTO IN ('EP', 'RI', 'AP') AND
-								FechaJornada between '{}' and '{}'
-				GROUP BY
-					[IdTipoMovimiento]
-					,[Tipo]
-					,[FechaJornada]
-					,[idPostcosecha]
-					,[idBloque]
-					,[idVariedad]
-					,[TipoCorte]
-					,DATEPART(HOUR, [FechaSistema])
-					,[Marca]
-					,[idGradodeCalidad]
+    		SELECT
+    			[IdTipoMovimiento]
+    			,[Tipo]
+    			,[FechaJornada]
+    			,[idPostcosecha]
+    			,[idBloque]
+    			,[idVariedad]
+    			,[TipoCorte]
+    			,SUM([TotalTallos]) Tallos
+    			,DATEPART(HOUR, [FechaSistema]) Hora
+    			,[Marca]
+    			,[idGradodeCalidad]
+    			,GETDATE() [FechaEjecucion]
+    		FROM [FDIM_Reports].[dbo].[MovimientoInventario] WITH(NOLOCK)
+    		WHERE 	IDTIPOMOVIMIENTO IN ('EP', 'RI', 'AP') AND
+    						FechaJornada between '{}' and '{}'
+    		GROUP BY
+    			[IdTipoMovimiento]
+    			,[Tipo]
+    			,[FechaJornada]
+    			,[idPostcosecha]
+    			,[idBloque]
+    			,[idVariedad]
+    			,[TipoCorte]
+    			,DATEPART(HOUR, [FechaSistema])
+    			,[Marca]
+    			,[idGradodeCalidad]
 
-		'''.format(desde, hasta)
+    '''.format(desde, hasta)
 
     df_produccion = excecute_query(
         strCon=str_con_FDIM_Reports,
@@ -168,16 +169,28 @@ def run():
         literal=True
     )
 
-    # df.to_csv('ts_produccion.csv', encoding='utf-8', sep=';')
-    insertDataToSql_Alchemy(
+    path = bulk_space_FDIM + 'ts_produccion.txt'
 
+    df.to_csv(path, encoding='utf-8', sep=';', index=False)
+
+    bulkInsert(
         strCon=str_con_FDIM_Planeacion,
         schema='fact',
         table='produccion',
-        data=df,
-        index=False
-
+        file_path=path
     )
+
+    # df = pd.read_csv(path, sep=';', encoding='utf-8')
+
+    # insertDataToSql_Alchemy(
+
+    #     strCon=str_con_FDIM_Planeacion,
+    #     schema='fact',
+    #     table='produccion',
+    #     data=df,
+    #     index=False
+
+    # )
 
 
 if __name__ == '__main__':

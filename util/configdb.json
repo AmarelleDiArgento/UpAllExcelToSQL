@@ -22,7 +22,8 @@
 			"db": "FDIM_Reports",
 			"user": "eflower",
 			"password": "eflower3000"
-		}
+		},
+		"bulk_space": "\\\\elt-fdim-fca\\Intercambio"
 	},
 	"ServDB12_DB_DWFdim": {
 		"db_con": {
