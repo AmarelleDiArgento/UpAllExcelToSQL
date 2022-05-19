@@ -1,0 +1,35 @@
+{
+	"isTest": false,
+	"ServFDIM_DB_Planeacion": {
+		"db_con": {
+			"server": "elt-fdim-fca",
+			"db": "Planeacion",
+			"user": "data_analysis",
+			"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361"
+		}
+	},
+	"ServDB10_DB_FDIM": {
+		"db_con": {
+			"server": "elt-db10-fca",
+			"db": "FDIM",
+			"user": "eflower",
+			"password": "eflower3000"
+		}
+	},
+	"ServDB12_DB_FDIM_Reports": {
+		"db_con": {
+			"server": "elt-db12-fca",
+			"db": "FDIM_Reports",
+			"user": "eflower",
+			"password": "eflower3000"
+		}
+	},
+	"ServDB12_DB_DWFdim": {
+		"db_con": {
+			"server": "elt-db12-fca",
+			"db": "DWFdim",
+			"user": " UserDWAdmin",
+			"password": "UsrAdmin55*."
+		}
+	}
+}

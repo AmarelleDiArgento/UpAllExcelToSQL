@@ -1,83 +1,85 @@
 {
 	"isTest": false,
-	"db_con": {
-		"server": "elt-fdim-fca",
-		"db": "Planeacion",
-		"user": "data_analysis",
-		"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361"
-	},
-	"files": [
-		{
-			"local": false,
-			"directory": true,
-			"dir": "P:\\",
-			"regex": {
-				"content": "ppt_",
-				"ext": "xlsx"
-			},
-			"sheets": [
-				"Base"
-			],
-			"firstRow": 0,
-			"archive": true,
-			"schema": "tmp",
-			"table": "ppt_Excel_test",
-			"truncate": false,
-			"depureColumns": [
-				"idYear",
-				"idSemana",
-				"Finca",
-				"Origen"
-			],
-			"index": false
+	"general": {
+		"db_con": {
+			"server": "elt-fdim-fca",
+			"db": "Planeacion",
+			"user": "data_analysis",
+			"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361"
 		},
-		{
-			"local": false,
-			"directory": true,
-			"dir": "P:\\",
-			"regex": {
-				"content": "cor_",
-				"ext": "xlsx"
+		"files": [
+			{
+				"local": false,
+				"directory": true,
+				"dir": "P:\\",
+				"regex": {
+					"content": "ppt_",
+					"ext": "xlsx"
+				},
+				"sheets": [
+					"Base"
+				],
+				"firstRow": 0,
+				"archive": true,
+				"schema": "tmp",
+				"table": "ppt_Excel_test",
+				"truncate": false,
+				"depureColumns": [
+					"idYear",
+					"idSemana",
+					"Finca",
+					"Origen"
+				],
+				"index": false
 			},
-			"sheets": [
-				"Base"
-			],
-			"firstRow": 0,
-			"archive": true,
-			"schema": "tmp",
-			"table": "cor_Excel_test",
-			"truncate": false,
-			"depureColumns": [
-				"idYear",
-				"idSemana",
-				"Finca",
-				"Origen"
-			],
-			"index": false
-		},
-		{
-			"local": false,
-			"directory": true,
-			"dir": "P:\\",
-			"regex": {
-				"content": "nof_",
-				"ext": "xlsx"
+			{
+				"local": false,
+				"directory": true,
+				"dir": "P:\\",
+				"regex": {
+					"content": "cor_",
+					"ext": "xlsx"
+				},
+				"sheets": [
+					"Base"
+				],
+				"firstRow": 0,
+				"archive": true,
+				"schema": "tmp",
+				"table": "cor_Excel_test",
+				"truncate": false,
+				"depureColumns": [
+					"idYear",
+					"idSemana",
+					"Finca",
+					"Origen"
+				],
+				"index": false
 			},
-			"sheets": [
-				"Base"
-			],
-			"firstRow": 0,
-			"archive": true,
-			"schema": "tmp",
-			"table": "nof_Excel_test",
-			"truncate": false,
-			"depureColumns": [
-				"IDYEAR",
-				"IDWEEK",
-				"Finca",
-				"Origen"
-			],
-			"index": false
-		}
-	]
+			{
+				"local": false,
+				"directory": true,
+				"dir": "P:\\",
+				"regex": {
+					"content": "nof_",
+					"ext": "xlsx"
+				},
+				"sheets": [
+					"Base"
+				],
+				"firstRow": 0,
+				"archive": true,
+				"schema": "tmp",
+				"table": "nof_Excel_test",
+				"truncate": false,
+				"depureColumns": [
+					"IDYEAR",
+					"IDWEEK",
+					"Finca",
+					"Origen"
+				],
+				"index": false
+			}
+		]
+	}
 }

@@ -1,14 +1,10 @@
 
 
-from cmath import log
-from distutils.command.build_scripts import first_line_re
 from pandas import DataFrame
-from pylib.py_lib import blockExtractDataFile, convertXlsToCsv, createDirectory, extractDataFile, packageForFileError, removeDirectory, removeFile, searchFilesByContentInTitle
-
-
 import datetime as dt
 
-from pylib.py_lib import excutionTime, parameters, workDirectory, insertDataToSql_Alchemy, stringConnect
+from pylib.py_lib import blockExtractDataFile, convertXlsToCsv, excutionTime, extractDataFile, packageForFileError, removeDirectory, removeFile, searchFilesByContentInTitle, parameters, workDirectory, insertDataToSql_Alchemy, stringConnect
+
 
 ROOT = workDirectory()
 DB_CON, FILES, ISTEST = parameters(ROOT)
@@ -79,26 +75,26 @@ def execute_files_planning():
                     sheets=file['sheets']
                 )
 
-            print(df.shape)
-            if df.shape[0] > 0:
-                if file['regex']['content'] == 'ppt_':
-                    df = ajustes(df, file=file)
+                print(df.shape)
+                if df.shape[0] > 0:
+                    if file['regex']['content'] == 'ppt_':
+                        df = ajustes(df, file=file)
 
-                df.rename(columns={'source': 'Origen'}, inplace=True)
-                df['Origen'] = 'Usuario'
-                df['FechaEjecucion'] = dt.datetime.now().strftime('%Y-%m-%d')
-                # # df.groupby(by=).()
-                # depure(df=df, where=file['depureColumns'])
+                    df.rename(columns={'source': 'Origen'}, inplace=True)
+                    df['Origen'] = 'Usuario'
+                    df['FechaEjecucion'] = dt.datetime.now().strftime('%Y-%m-%d')
+                    # # df.groupby(by=).()
+                    # depure(df=df, where=file['depureColumns'])
 
-                insertDataToSql_Alchemy(
-                    strCon=strCon,
-                    schema=file['schema'],
-                    table=file['table'],
-                    data=df,
-                    truncate=file['truncate'],
-                    depureColumns=file['depureColumns'],
-                    index=file['index']
-                )
+                    insertDataToSql_Alchemy(
+                        strCon=strCon,
+                        schema=file['schema'],
+                        table=file['table'],
+                        data=df,
+                        truncate=file['truncate'],
+                        depureColumns=file['depureColumns'],
+                        index=file['index']
+                    )
 
     except (AttributeError, KeyError) as e:
         packageForFileError(
@@ -108,7 +104,7 @@ def execute_files_planning():
         )
 
 
-# @excutionTime
+@excutionTime
 def run():
     # print(FILES)
     execute_files_planning()
