@@ -4,7 +4,9 @@ from importlib.resources import path
 import pandas as pd
 import datetime as dt
 
-from pylib.py_lib import bulkInsert, excecute_query, excutionTime, insertDataToSql_Alchemy, removeColumnsIn, workDirectory, parameters, stringConnect
+import time
+
+from pylib.py_lib import bulkInsert, deleteDataToSql, excecute_query, excutionTime, insertDataToSql_Alchemy, removeColumnsIn, workDirectory, parameters, stringConnect
 
 
 ROOT = workDirectory()
@@ -62,9 +64,22 @@ def run():
     str_con_FDIM_Planeacion = stringConnect(ServFDIM_DB_Planeacion)
 
     # print('ServFDIM', ServFDIM_DB_Planeacion, bulk_space_FDIM)
+    ahora = dt.datetime.now()
+    # diferencia = dt.timedelta(hours=12, minutes=00)
+    # ahora = ahora - diferencia
 
-    desde = '2022-01-01'
-    hasta = '2022-05-20'
+    diferencia = dt.timedelta(hours=0, minutes=10)
+    print(diferencia)
+    desde = ahora - diferencia
+
+    t_desde = desde.strftime('%Y-%m-%d %H:00:00')
+    t_hasta = ahora.strftime('%Y-%m-%d %H:%M:%S')
+    print(t_desde)
+    print(t_hasta)
+
+    intHour = int(desde.strftime('%H'))
+    print(intHour)
+
     # desde = '2022-05-19'
     # hasta = '2022-05-19'
 
@@ -85,7 +100,7 @@ def run():
     			,GETDATE() [FechaEjecucion]
     		FROM [FDIM_Reports].[dbo].[MovimientoInventario] WITH(NOLOCK)
     		WHERE 	IDTIPOMOVIMIENTO IN ('EP', 'RI', 'AP') AND
-    						FechaJornada between '{}' and '{}'
+    						[FechaSistema] between '{}' and '{}'
     		GROUP BY
     			[IdTipoMovimiento]
     			,[Tipo]
@@ -98,12 +113,25 @@ def run():
     			,[Marca]
     			,[idGradodeCalidad]
 
-    '''.format(desde, hasta)
+    '''.format(t_desde, t_hasta)
 
     df_produccion = excecute_query(
         strCon=str_con_FDIM_Reports,
         query=query
     )
+
+    deleteDataToSql(strCon=str_con_FDIM_Planeacion,
+                    schema='fact', table='produccion',
+                    where=['''
+                            IdDate = (
+                            SELECT [IdDate]
+                            FROM [PLANEACION].[dim].[Calendario]
+                            WHERE [Date] = CAST(GETDATE() AS DATE))
+                            ''',
+                           'Hora>={}'.format(intHour)
+                           ]
+                    )
+
     if df_produccion.empty == False:
 
         df_calendario = excecute_query(
