@@ -5,7 +5,8 @@
 			"server": "elt-fdim-fca",
 			"db": "Planeacion",
 			"user": "data_analysis",
-			"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361"
+			"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361",
+			"bulk_space": "\\\\elt-fdim-fca\\Intercambio"
 		}
 	},
 	"ServDB10_DB_FDIM": {
@@ -22,8 +23,7 @@
 			"db": "FDIM_Reports",
 			"user": "eflower",
 			"password": "eflower3000"
-		},
-		"bulk_space": "\\\\elt-fdim-fca\\Intercambio"
+		}
 	},
 	"ServDB12_DB_DWFdim": {
 		"db_con": {

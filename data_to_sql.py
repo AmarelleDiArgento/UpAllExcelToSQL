@@ -4,7 +4,7 @@ from importlib.resources import path
 import pandas as pd
 import datetime as dt
 
-from pylib.py_lib import bulkInsert, excecute_query, excutionTime, insertDataToSql, insertDataToSql_Alchemy, removeColumnsIn, trimAllColumns, workDirectory, parameters, stringConnect
+from pylib.py_lib import bulkInsert, excecute_query, excutionTime, insertDataToSql_Alchemy, removeColumnsIn, workDirectory, parameters, stringConnect
 
 
 ROOT = workDirectory()
@@ -51,13 +51,17 @@ def add_new_element(strCon, schema, table, df_new_elements,
 
 @excutionTime
 def run():
-    is_test_DB12, ServDB12_DB_FDIM_Reports, bulk_space = read_conexion(
+    is_test_DB12, ServDB12_DB_FDIM_Reports, bulk_space_DB12 = read_conexion(
         'ServDB12_DB_FDIM_Reports')
     str_con_FDIM_Reports = stringConnect(ServDB12_DB_FDIM_Reports)
+
+    # print('ServDB12', str_con_FDIM_Reports, bulk_space_DB12)
 
     is_test_FDIM, ServFDIM_DB_Planeacion, bulk_space_FDIM = read_conexion(
         'ServFDIM_DB_Planeacion')
     str_con_FDIM_Planeacion = stringConnect(ServFDIM_DB_Planeacion)
+
+    # print('ServFDIM', ServFDIM_DB_Planeacion, bulk_space_FDIM)
 
     desde = '2022-01-01'
     hasta = '2022-05-20'
@@ -100,85 +104,90 @@ def run():
         strCon=str_con_FDIM_Reports,
         query=query
     )
+    if df_produccion.empty == False:
 
-    df_calendario = excecute_query(
-        strCon=str_con_FDIM_Planeacion,
-        schema='dim',
-        table='Calendario',
-        fields=['IdDate', 'Date']
+        df_calendario = excecute_query(
+            strCon=str_con_FDIM_Planeacion,
+            schema='dim',
+            table='Calendario',
+            fields=['IdDate', 'Date']
 
-    )
+        )
 
-    df_marca = excecute_query(
-        strCon=str_con_FDIM_Planeacion,
-        schema='dim',
-        table='Marca',
-        fields=['ID_Marca', 'Marca']
+        df_marca = excecute_query(
+            strCon=str_con_FDIM_Planeacion,
+            schema='dim',
+            table='Marca',
+            fields=['ID_Marca', 'Marca']
 
-    )
+        )
 
-    df_marca = add_new_element(
-        strCon=str_con_FDIM_Planeacion,
-        schema='dim',
-        table='Marca',
-        df_new_elements=df_produccion,
-        df_old_elements=df_marca,
-        column='Marca'
-    )
+        df_marca = add_new_element(
+            strCon=str_con_FDIM_Planeacion,
+            schema='dim',
+            table='Marca',
+            df_new_elements=df_produccion,
+            df_old_elements=df_marca,
+            column='Marca'
+        )
 
-    df_corte = excecute_query(
-        strCon=str_con_FDIM_Planeacion,
-        schema='dim',
-        table='TipoCorte',
-        fields=['ID_TipoCorte', 'TipoCorte']
-    )
+        df_corte = excecute_query(
+            strCon=str_con_FDIM_Planeacion,
+            schema='dim',
+            table='TipoCorte',
+            fields=['ID_TipoCorte', 'TipoCorte']
+        )
 
-    df_corte = add_new_element(
-        strCon=str_con_FDIM_Planeacion,
-        schema='dim',
-        table='TipoCorte',
-        df_new_elements=df_produccion,
-        df_old_elements=df_corte,
-        column='TipoCorte'
-    )
+        df_corte = add_new_element(
+            strCon=str_con_FDIM_Planeacion,
+            schema='dim',
+            table='TipoCorte',
+            df_new_elements=df_produccion,
+            df_old_elements=df_corte,
+            column='TipoCorte'
+        )
 
-    df = df_produccion.merge(df_calendario, how='left',
-                             left_on='FechaJornada', right_on='Date')
+        df = df_produccion.merge(df_calendario, how='left',
+                                 left_on='FechaJornada', right_on='Date')
 
-    df = removeColumnsIn(
-        dataFrame=df,
-        listToRemove=['FechaJornada', 'Date'],
-        literal=True
-    )
+        df = removeColumnsIn(
+            dataFrame=df,
+            listToRemove=['FechaJornada', 'Date'],
+            literal=True
+        )
 
-    df = df.merge(df_corte, how='left',
-                  on='TipoCorte')
+        df = df.merge(df_corte, how='left',
+                      on='TipoCorte')
 
-    df = removeColumnsIn(
-        dataFrame=df,
-        listToRemove=['TipoCorte'],
-        literal=True
-    )
+        df = removeColumnsIn(
+            dataFrame=df,
+            listToRemove=['TipoCorte'],
+            literal=True
+        )
 
-    df = df.merge(df_marca, how='left',
-                  on='Marca')
+        df = df.merge(df_marca, how='left',
+                      on='Marca')
 
-    df = removeColumnsIn(
-        dataFrame=df,
-        listToRemove=['Marca'],
-        literal=True
-    )
+        df = removeColumnsIn(
+            dataFrame=df,
+            listToRemove=['Marca'],
+            literal=True
+        )
 
-    path = bulk_space_FDIM + 'ts_produccion.txt'
+        bulk_path = bulk_space_FDIM + 'ts_produccion.txt'
+        # print(bulk_path)
 
-    df.to_csv(path, encoding='utf-8', sep=';', index=False)
+        df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
 
-    bulkInsert(
-        strCon=str_con_FDIM_Planeacion,
-        schema='fact',
-        table='produccion',
-        file_path=path
-    )
+        bulkInsert(
+            strCon=str_con_FDIM_Planeacion,
+            schema='fact',
+            table='produccion',
+            data=df,
+            file_path=bulk_path
+        )
+    else:
+        print('No hay datos para insertar')
 
     # df = pd.read_csv(path, sep=';', encoding='utf-8')
 
