@@ -136,3 +136,5 @@ dmypy.json
 *.xlsx
 *.xls
 *.csv
+
+util/config.json

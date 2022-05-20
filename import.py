@@ -1,14 +1,10 @@
 
 
-from cmath import log
-from distutils.command.build_scripts import first_line_re
 from pandas import DataFrame
-from pylib.py_lib import blockExtractDataFile, convertXlsToCsv, createDirectory, extractDataFile, packageForFileError, removeDirectory, removeFile, searchFilesByContentInTitle
-
-
 import datetime as dt
 
-from pylib.py_lib import excutionTime, parameters, workDirectory, insertDataToSql_Alchemy, stringConnect
+from pylib.py_lib import blockExtractDataFile, convertXlsToCsv, excutionTime, extractDataFile, packageForFileError, removeDirectory, removeFile, searchFilesByContentInTitle, parameters, workDirectory, insertDataToSql_Alchemy, stringConnect
+
 
 ROOT = workDirectory()
 DB_CON, FILES, ISTEST = parameters(ROOT)
@@ -78,8 +74,6 @@ def execute_files_planning():
                     file=file['file'],
                     sheets=file['sheets']
                 )
-            # print(file['depureColumns'])
-            # print(df.shape)
             if df.shape[0] > 0:
 
                 if file['regex']['content'] == 'ppt_':
