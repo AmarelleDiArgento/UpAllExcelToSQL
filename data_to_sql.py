@@ -4,12 +4,13 @@ from importlib.resources import path
 import pandas as pd
 import datetime as dt
 
-import time
 
 from pylib.py_lib import bulkInsert, deleteDataToSql, excecute_query, excutionTime, insertDataToSql_Alchemy, removeColumnsIn, workDirectory, parameters, stringConnect
 
 
 ROOT = workDirectory()
+
+DST = 'planeacion_new'
 
 
 def read_conexion(name='general'):
@@ -37,7 +38,7 @@ def add_new_element(strCon, schema, table, df_new_elements,
     if data.empty == False:
         data = removeColumnsIn(
             dataFrame=data,
-            listToRemove=['_merge', 'ID_' + column]
+            listToRemove=['_merge', 'id' + column]
         )
 
         insertDataToSql_Alchemy(strCon=strCon, schema=schema,
@@ -47,7 +48,7 @@ def add_new_element(strCon, schema, table, df_new_elements,
         strCon=strCon,
         schema=schema,
         table=table,
-        fields=['ID_' + column, column]
+        fields=['id' + column, column]
     )
 
 
@@ -64,11 +65,17 @@ def run():
     str_con_FDIM_Planeacion = stringConnect(ServFDIM_DB_Planeacion)
 
     # print('ServFDIM', ServFDIM_DB_Planeacion, bulk_space_FDIM)
+
+    is_test_FDIM, ServDB10_DB_FDIM, bulk_space_DB10 = read_conexion(
+        'ServDB10_DB_FDIM')
+    str_con_DB10_FDIM = stringConnect(ServDB10_DB_FDIM)
+
+    # print('ServFDIM', ServFDIM_DB_Planeacion, bulk_space_FDIM)
     ahora = dt.datetime.now()
     # diferencia = dt.timedelta(hours=12, minutes=00)
     # ahora = ahora - diferencia
 
-    diferencia = dt.timedelta(hours=0, minutes=10)
+    diferencia = dt.timedelta(hours=3395, minutes=8)
     print(diferencia)
     desde = ahora - diferencia
 
@@ -77,20 +84,29 @@ def run():
     print(t_desde)
     print(t_hasta)
 
+    intDay = int(desde.strftime('%Y%m%d'))
+    intToday = int(desde.strftime('%Y%m%d'))
+    
     intHour = int(desde.strftime('%H'))
+    if intDay != intToday:
+        intHour = 0
+        t_desde = desde.strftime('%Y-%m-%d 00:00:00')
+
     print(intHour)
 
     # desde = '2022-05-19'
     # hasta = '2022-05-19'
 
-    query = '''
+    # Consulta Producción
+    queryPro = '''
 
     		SELECT
     			[IdTipoMovimiento]
     			,[Tipo]
-    			,[FechaJornada]
+    			,CAST(CONVERT(varchar,[FechaJornada],112) as INT) [FechaInt]
     			,[idPostcosecha]
     			,[idBloque]
+                ,[idFinca]
     			,[idVariedad]
     			,[TipoCorte]
     			,SUM([TotalTallos]) Tallos
@@ -107,6 +123,7 @@ def run():
     			,[FechaJornada]
     			,[idPostcosecha]
     			,[idBloque]
+                ,[idFinca]
     			,[idVariedad]
     			,[TipoCorte]
     			,DATEPART(HOUR, [FechaSistema])
@@ -117,30 +134,37 @@ def run():
 
     df_produccion = excecute_query(
         strCon=str_con_FDIM_Reports,
-        query=query
+        query=queryPro
     )
 
-    deleteDataToSql(strCon=str_con_FDIM_Planeacion,
-                    schema='fact', table='produccion',
-                    where=['''
-                            IdDate = (
-                            SELECT [IdDate]
-                            FROM [PLANEACION].[dim].[Calendario]
-                            WHERE [Date] = CAST(GETDATE() AS DATE))
-                            ''',
-                           'Hora>={}'.format(intHour)
-                           ]
-                    )
+    deleteDataToSql(
+        strCon=str_con_FDIM_Planeacion,
+        schema='fact',
+        table=DST,
+        # 'produccion',
+        where=['[FechaInt] >= {}'.format(intDay),
+               '[Hora] >= {}'.format(intHour)
+               ]
+    )
 
     if df_produccion.empty == False:
 
-        df_calendario = excecute_query(
-            strCon=str_con_FDIM_Planeacion,
-            schema='dim',
-            table='Calendario',
-            fields=['IdDate', 'Date']
+        queryEmp = '''
 
+			SELECT f.IdFinca, f.FincaCompleto, e.IdEmpresa
+            FROM GLB.Fincas f
+                LEFT JOIN GLB.vwEmpresa e
+                    ON f.IdEmpresa = e.IdEmpresa
+
+    '''
+
+        df_empresas = excecute_query(
+            strCon=str_con_DB10_FDIM,
+            query=queryEmp
         )
+
+        df = df_produccion.merge(df_empresas, how='left',
+                                 left_on='idFinca', right_on='IdFinca')
 
         df_marca = excecute_query(
             strCon=str_con_FDIM_Planeacion,
@@ -175,45 +199,37 @@ def run():
             column='TipoCorte'
         )
 
-        df = df_produccion.merge(df_calendario, how='left',
-                                 left_on='FechaJornada', right_on='Date')
-
-        df = removeColumnsIn(
-            dataFrame=df,
-            listToRemove=['FechaJornada', 'Date'],
-            literal=True
-        )
-
         df = df.merge(df_corte, how='left',
                       on='TipoCorte')
-
-        df = removeColumnsIn(
-            dataFrame=df,
-            listToRemove=['TipoCorte'],
-            literal=True
-        )
 
         df = df.merge(df_marca, how='left',
                       on='Marca')
 
         df = removeColumnsIn(
             dataFrame=df,
-            listToRemove=['Marca'],
+            listToRemove=['Marca', 'TipoCorte'],
             literal=True
         )
 
+        df = removeColumnsIn(
+            dataFrame=df,
+            listToRemove=['Finca'],
+            literal=False
+        )
+
         bulk_path = bulk_space_FDIM + 'ts_produccion.txt'
-        # print(bulk_path)
 
         df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
 
         bulkInsert(
             strCon=str_con_FDIM_Planeacion,
             schema='fact',
-            table='produccion',
+            table=DST,
+            # --'produccion_new',
             data=df,
             file_path=bulk_path
         )
+
     else:
         print('No hay datos para insertar')
 
