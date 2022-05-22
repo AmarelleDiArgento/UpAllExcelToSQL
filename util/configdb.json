@@ -32,5 +32,13 @@
 			"user": " UserDWAdmin",
 			"password": "UsrAdmin55*."
 		}
+	},
+	"ServJP13M_DB_AnalysisDW": {
+		"db_con": {
+			"server": "JUPITER13MIA",
+			"db": "AnalysisDW",
+			"user": "data_analysis",
+			"password": "30e4B31b-BfE1-47C3-aF32-45fEb2379361"
+		}
 	}
 }
