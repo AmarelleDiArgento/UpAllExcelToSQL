@@ -10,7 +10,7 @@ from pylib.py_lib import bulkInsert, deleteDataToSql, excecute_query, excutionTi
 
 ROOT = workDirectory()
 
-DST = 'planeacion_new'
+DST = 'Produccion'
 
 
 def read_conexion(name='general'):
@@ -40,6 +40,7 @@ def add_new_element(strCon, schema, table, df_new_elements,
             dataFrame=data,
             listToRemove=['_merge', 'id' + column]
         )
+        data = data.sort_values(column)
 
         insertDataToSql_Alchemy(strCon=strCon, schema=schema,
                                 table=table, data=data, index=True)
@@ -71,11 +72,10 @@ def run():
     str_con_DB10_FDIM = stringConnect(ServDB10_DB_FDIM)
 
     # print('ServFDIM', ServFDIM_DB_Planeacion, bulk_space_FDIM)
-    ahora = dt.datetime.now()
-    # diferencia = dt.timedelta(hours=12, minutes=00)
-    # ahora = ahora - diferencia
 
-    diferencia = dt.timedelta(hours=3395, minutes=8)
+    ahora = dt.datetime.now()
+
+    diferencia = dt.timedelta(hours=0, minutes=10)
     print(diferencia)
     desde = ahora - diferencia
 
@@ -85,13 +85,15 @@ def run():
     print(t_hasta)
 
     intDay = int(desde.strftime('%Y%m%d'))
-    intToday = int(desde.strftime('%Y%m%d'))
-    
+    intToday = int(ahora.strftime('%Y%m%d'))
+
     intHour = int(desde.strftime('%H'))
+    print(intDay, intToday, intDay != intToday)
     if intDay != intToday:
         intHour = 0
         t_desde = desde.strftime('%Y-%m-%d 00:00:00')
 
+    # t_desde = '2020-01-01 00:00:00'
     print(intHour)
 
     # desde = '2022-05-19'
@@ -137,17 +139,17 @@ def run():
         query=queryPro
     )
 
-    deleteDataToSql(
-        strCon=str_con_FDIM_Planeacion,
-        schema='fact',
-        table=DST,
-        # 'produccion',
-        where=['[FechaInt] >= {}'.format(intDay),
-               '[Hora] >= {}'.format(intHour)
-               ]
-    )
-
     if df_produccion.empty == False:
+
+        deleteDataToSql(
+            strCon=str_con_FDIM_Planeacion,
+            schema='fact',
+            table=DST,
+            # 'produccion',
+            where=['[FechaInt] >= {}'.format(intDay),
+                   '[Hora] >= {}'.format(intHour)
+                   ]
+        )
 
         queryEmp = '''
 
@@ -156,7 +158,7 @@ def run():
                 LEFT JOIN GLB.vwEmpresa e
                     ON f.IdEmpresa = e.IdEmpresa
 
-    '''
+        '''
 
         df_empresas = excecute_query(
             strCon=str_con_DB10_FDIM,
@@ -170,7 +172,7 @@ def run():
             strCon=str_con_FDIM_Planeacion,
             schema='dim',
             table='Marca',
-            fields=['ID_Marca', 'Marca']
+            fields=['idMarca', 'Marca']
 
         )
 
@@ -187,7 +189,7 @@ def run():
             strCon=str_con_FDIM_Planeacion,
             schema='dim',
             table='TipoCorte',
-            fields=['ID_TipoCorte', 'TipoCorte']
+            fields=['idTipoCorte', 'TipoCorte']
         )
 
         df_corte = add_new_element(
@@ -217,15 +219,16 @@ def run():
             literal=False
         )
 
-        bulk_path = bulk_space_FDIM + 'ts_produccion.txt'
+        bulk_path = bulk_space_FDIM + 'ts_{}.txt'.format(DST)
 
+        # df = pd.DataFrame()
+        print('df Size:', df.shape)
         df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
 
         bulkInsert(
             strCon=str_con_FDIM_Planeacion,
             schema='fact',
             table=DST,
-            # --'produccion_new',
             data=df,
             file_path=bulk_path
         )
@@ -233,17 +236,17 @@ def run():
     else:
         print('No hay datos para insertar')
 
-    # df = pd.read_csv(path, sep=';', encoding='utf-8')
+    df = pd.read_csv(path, sep=';', encoding='utf-8')
 
-    # insertDataToSql_Alchemy(
+    insertDataToSql_Alchemy(
 
-    #     strCon=str_con_FDIM_Planeacion,
-    #     schema='fact',
-    #     table='produccion',
-    #     data=df,
-    #     index=False
+        strCon=str_con_FDIM_Planeacion,
+        schema='fact',
+        table='produccion',
+        data=df,
+        index=False
 
-    # )
+    )
 
 
 if __name__ == '__main__':
