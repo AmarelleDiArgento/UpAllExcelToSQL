@@ -7,7 +7,7 @@ from pylib.py_lib import blockExtractDataFile, convertXlsToCsv, excutionTime, ex
 
 
 ROOT = workDirectory()
-DB_CON, FILES, ISTEST = parameters(ROOT)
+DB_CON, FILES, ISTEST, BULK_SPACE = parameters(ROOT)
 
 
 strCon = stringConnect(DB_CON)
