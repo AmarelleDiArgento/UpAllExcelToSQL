@@ -49,9 +49,9 @@
 				"table": "cor_Excel_test",
 				"truncate": false,
 				"depureColumns": [
-					"idYear",
-					"idSemana",
-					"Finca",
+					"IYEAR",
+					"IDWEEK",
+					"FINCA",
 					"Origen"
 				],
 				"index": false
