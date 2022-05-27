@@ -136,7 +136,7 @@ dmypy.json
 *.xlsx
 *.xls
 *.csv
-
+*.sql
 *.json
 
 test.py

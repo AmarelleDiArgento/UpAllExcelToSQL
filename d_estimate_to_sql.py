@@ -94,190 +94,28 @@ def run():
     inicio = df_fecha['IniSem'].min()
     fin = df_fecha['FinSem'].max()
 
+    intFecha = int(inicio.strftime('%Y%m%d'))
+
     print(inicio, fin)
     exp = 1
     # Consulta Estimados DB10_FDIM
     queryEst = '''
+        SELECT  
+                1 [Estado]
+            ,ESTIMADO [Estimado]
+            ,ESTIMADO1 [Estimado_1]
+            ,ESTIMADO2 [Estimado_2]
+            ,CAST(CONVERT(varchar,[FECHAPRODUCCION],112) AS INT) [FechaInt]
+            ,[IdGradoMaestro] [idGrado]
+            ,[idVariedad]
+            ,[PORCENTAJE_NACIONAL] [p_Nal]
+            ,0.0 [p_Gra]
+            ,[idFinca]
+            ,GETDATE() [FechaEjecucion]
+        FROM [FDIM].[PSI].[Estimado_Diario_Por_Fecha_Con_Grados] e WITH(NOLOCK)
+        WHERE FECHAPRODUCCION BETWEEN '{}' AND '{}'
 
-
-	DECLARE @FECHA_IN DATE = '{}'
-	DECLARE @FECHA_FI DATE = '{}'
-
-	------------------------------------------------------------------------------
-	--	Tabla temporal para guardar los resultados del proceso					--
-	------------------------------------------------------------------------------
-	IF	OBJECT_ID ('tempdb..#tmpResultado') IS NOT NULL
-	BEGIN
-		DROP TABLE #tmpResultado
-	END
-	CREATE TABLE #tmpResultado
-	(
-		IDFINCA					SMALLINT NOT NULL,
-		IDPRODUCTO				SMALLINT NOT NULL,
-		IDVARIEDAD				SMALLINT NOT NULL,
-		IDYEAR					SMALLINT,
-		IDWEEK					SMALLINT,
-		FECHA					SMALLDATETIME ,
-		PORCENTAJE_NACIONAL		NUMERIC(6,2),
-		ESTIM2PM				INT ,
-		ESTIM2PMPERIODO1		INT ,
-		ESTIM2PMPERIODO2		INT ,
-		IdGrado					INT ,
-		PorcGrado				numeric(5,2),
-		DescripcionIngles       VARCHAR(Max),
-		ROW						INT
---		CONSTRAINT PK_tmpResultadot_TMP PRIMARY KEY (IDFINCA, IDPRODUCTO, IDVARIEDAD, FECHA)
-	)
-
-
-	------------------------------------------------------------------------------------------------------------------------------------------------------------
-   	--                                                     Captura el Estimado Diario de Producción		 		    	                                      --
-   	------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-	INSERT INTO #tmpResultado
-	SELECT		E.IDFINCA,
-				E.IDPRODUCTO,
-				E.IDVARIEDAD,
-				PP.IDYEAR,
-				PP.ORDEN,
-				E.FECHAESTIMACION FECHA,
-				ISNULL(PN.PORNACIONAL, 0) PORCENTAJE_NACIONAL,
-			    FLOOR( E.TALLOSPERIODO03 - (E.TALLOSPERIODO03 * ISNULL(PN.PORNACIONAL, 0) / 100 ))  AS ESTIM2PM,
-				0 AS ESTIM2PMPERIODO1,
-				0  AS ESTIM2PMPERIODO2,
-				E.IdGrado,
-				E.ValorGrado PorcGrado,
-				G.DescripcionIngles	 ,
-				ROW_NUMBER() OVER(PARTITION BY E.IDVARIEDAD,E.FECHAESTIMACION,E.IDFINCA,E.IDPRODUCTO ORDER BY E.FECHAESTIMACION DESC) [Row]
-
-	FROM		PSI.EstimadoDiarioProduccionCopy E	 with(nolock)
-	JOIN		PSI.GradosdeCalidad G  with(nolock)  on E.idGrado = G.IdGrado
-	JOIN		PRESUPUESTO.GENERAL.PERIODOSPRESUPUESTOS PP with(nolock)
-				ON
-					E.FECHAESTIMACION BETWEEN PP.FECHAINICIO AND PP.FECHAFINAL AND
-					PP.IDPERIODICIDAD = 1
-	LEFT JOIN		PSI.PORNALSEMANAL PN  with(nolock)
-				ON E.IDFINCA = PN.IDFINCA AND
-					E.IDPRODUCTO = PN.IDPRODUCTO AND
-					E.IDVARIEDAD = PN.IDVARIEDAD AND
-					PP.IDYEAR = PN.IDYEAR AND
-					PP.ORDEN = PN.IDWEEK
-	LEFT JOIN	PSI.APPORNAL APN  with(nolock) ON
-					PN.IDPRODUCTO = APN.IDPRODUCTO
-	WHERE	 PP.Fechainicio >= CONCAT(@FECHA_IN , ' 00:00:00') and pp.Fechafinal <=  CONCAT(@FECHA_FI , ' 23:59:59')
-
-
-	------------------------------------------------------------------------------------------------------------------------------------------------------------
-   	--                                              SUMAR DIFERENCIA DE TALLOS AL PRIMER REGISTRO ESTIMADO					                                  --
-   	------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-	UPDATE ST
-		SET ST.ESTIM2PM = ESTIM2PM + INTERNA.DIFERENCIA3
-
-	FROM #tmpResultado ST
-	JOIN (
-
-		SELECT
-			TMP.FECHA,
-			TMP.IDFINCA,
-			TMP.IDPRODUCTO,
-			TMP.IDVARIEDAD,
-			SUM(TMP.ESTIM2PM) as [SUMTALLOS] ,
-			FLOOR( R.TallosPeriodo03 - (R.TallosPeriodo03 * ISNULL(TMP.PORCENTAJE_NACIONAL, 0) / 100 ))  -  SUM(TMP.ESTIM2PM) 'DIFERENCIA3',
-			avg(R.TallosPeriodo03) TallosPeriodo03,
-			FLOOR( R.TallosPeriodo03 - (R.TallosPeriodo03 * ISNULL(TMP.PORCENTAJE_NACIONAL, 0) / 100 ))  PROYECCIONINICIO
-		FROM #tmpResultado  TMP
-			INNER JOIN PSI.EstimadoDiarioProduccion R  with(nolock)
-				ON TMP.IDFINCA = R.IdFinca AND TMP.IDPRODUCTO = R.IdProducto AND TMP.IDVARIEDAD = R.IdVariedad AND TMP.FECHA = R.FechaEstimacion
-		--WHERE tmp.IdFinca = 2 and tmp.IdProducto = 1 and tmp.IdVariedad = 132 and tmp.FECHA = '2022-05-10 00:00:00'
-		GROUP BY
-			TMP.FECHA,
-			TMP.IDFINCA,
-			TMP.IDPRODUCTO,
-			TMP.IDVARIEDAD,
-			R.TallosPeriodo03,
-			R.TallosPeriodo01,
-			R.TallosPeriodo02,
-			TMP.PORCENTAJE_NACIONAL
-
-
-	) AS INTERNA
-		ON ST.FECHA = INTERNA.FECHA
-			AND ST.IDFINCA = INTERNA.IDFINCA
-			AND ST.IDPRODUCTO = INTERNA.IDPRODUCTO
-			AND ST.IDVARIEDAD = INTERNA.IDVARIEDAD
-	WHERE ST.Row = 1
-
-
-		--------------- Distribuir Grados Periodo 1 y 2 con los grados ------------------
-
-	UPDATE ST
-		SET ST.ESTIM2PMPERIODO1 = ( E.TALLOSPERIODO01 * st.PorcGrado / 100  )  ,
-			ST.ESTIM2PMPERIODO2 = ( E.TallosPeriodo02 * st.PorcGrado / 100 )
-	FROM #tmpResultado ST
-		INNER JOIN	PSI.EstimadoDiarioProduccion E  with(nolock)
-			ON	E.IdFinca = ST.IDFINCA AND
-				E.IdProducto = ST.IDPRODUCTO AND
-				E.IdVariedad = ST.IDVARIEDAD AND
-				E.FechaEstimacion = ST.FECHA
-
-		  --------------- Distribuir Grados Periodo 1 y 2 con los grados ------------------
-
-	UPDATE ST
-			SET ST.ESTIM2PMPERIODO1 = ESTIM2PMPERIODO1 + INTERNA.DIFERENCIA1,
-				ST.ESTIM2PMPERIODO2 = ESTIM2PMPERIODO2 + INTERNA.DIFERENCIA2
-	FROM #tmpResultado ST
-		JOIN (
-
-				SELECT
-					TMP.FECHA,
-					TMP.IDFINCA,
-					TMP.IDPRODUCTO,
-					TMP.IDVARIEDAD,
-					SUM(TMP.ESTIM2PM) as 'SUMTALLOS' ,
-					(CASE when 1 = {} THEN FLOOR( R.TallosPeriodo01 - (R.TallosPeriodo01 * ISNULL(TMP.PORCENTAJE_NACIONAL, 0) / 100 ))  ELSE R.TallosPeriodo01 END) -  SUM(TMP.ESTIM2PMPERIODO1)      as 'DIFERENCIA1' ,
-					(CASE when 1 = {} THEN FLOOR( R.TallosPeriodo02 - (R.TallosPeriodo02 * ISNULL(TMP.PORCENTAJE_NACIONAL, 0) / 100 ))  ELSE R.TallosPeriodo02 END) -  SUM(TMP.ESTIM2PMPERIODO2)      as 'DIFERENCIA2'
-							-- @Exportable =
-				FROM #tmpResultado  TMP
-					INNER JOIN PSI.EstimadoDiarioProduccion R  with(nolock)
-						ON	TMP.IDFINCA = R.IdFinca AND
-							TMP.IDPRODUCTO = R.IdProducto AND
-							TMP.IDVARIEDAD = R.IdVariedad AND
-							TMP.FECHA = R.FechaEstimacion
-				GROUP BY
-					TMP.FECHA,
-					TMP.IDFINCA,
-					TMP.IDPRODUCTO,
-					TMP.IDVARIEDAD,
-					R.TallosPeriodo03,
-					R.TallosPeriodo01,
-					R.TallosPeriodo02,
-					TMP.PORCENTAJE_NACIONAL
-
-
-			) AS INTERNA
-				ON	ST.FECHA = INTERNA.FECHA AND
-					ST.IDFINCA = INTERNA.IDFINCA AND
-					ST.IDPRODUCTO = INTERNA.IDPRODUCTO AND
-					ST.IDVARIEDAD = INTERNA.IDVARIEDAD
-			WHERE ST.Row = 1
-
-
-			SELECT	CAST(CONVERT(varchar,[Fecha],112) as INT) [FechaInt],
-					[idFinca],
-					[idVariedad],
-					[idGrado],
-					[PORCENTAJE_NACIONAL] [p_Nal],
-					[PorcGrado] [p_Gra],
-					[ESTIM2PM] Estimado_1,
-					[ESTIM2PMPERIODO1] Estimado_2,
-					[ESTIM2PMPERIODO2] Estimado,
-					1 [Estado]
-			FROM #tmpResultado
-
-
-        '''.format(inicio, fin, exp, exp)
+        '''.format(inicio, fin)
 
     df_estimado = excecute_query(
         strCon=str_con_DB10_FDIM,
@@ -340,7 +178,9 @@ def run():
 
         # print(df.dtypes)
 
-        df = pd.DataFrame()
+        df = pd.DataFrame(df,
+                          columns=['Estado', 'Estimado', 'Estimado_1', 'Estimado_2', 'FechaInt',
+                                   'idGrado', 'idVariedad', 'p_Gra', 'p_Nal', 'IdEmpresa', 'idGeo', 'FechaEjecucion'])
         # df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
 
         bulkInsert(
