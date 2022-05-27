@@ -5,7 +5,7 @@ import pandas as pd
 import datetime as dt
 
 
-from pylib.py_lib import bulkInsert, deleteDataToSql, excecute_query, excutionTime, insertDataToSql_Alchemy, removeColumnsIn, workDirectory, parameters, stringConnect
+from pylib.py_lib import add_new_element, bulkInsert, deleteDataToSql, excecute_query, excutionTime, removeColumnsIn, workDirectory, parameters, stringConnect
 
 
 ROOT = workDirectory()
@@ -21,36 +21,6 @@ def read_conexion(name='general'):
     )
 
     return (is_test, dbCon, bulk_space)
-
-
-def add_new_element(strCon, schema, table, df_new_elements,
-                    df_old_elements, column):
-
-    data = pd.DataFrame(df_new_elements[column].unique(), columns=[column])
-
-    if df_old_elements.empty == False:
-        data = pd.DataFrame(data, columns=[column])
-
-        data = data.merge(df_old_elements, on=column,
-                          how='left', indicator=True)
-        data = data[data['_merge'] == 'left_only']
-
-    if data.empty == False:
-        data = removeColumnsIn(
-            dataFrame=data,
-            listToRemove=['_merge', 'id' + column]
-        )
-        data = data.sort_values(column)
-
-        insertDataToSql_Alchemy(strCon=strCon, schema=schema,
-                                table=table, data=data, index=True)
-
-    return excecute_query(
-        strCon=strCon,
-        schema=schema,
-        table=table,
-        fields=['id' + column, column]
-    )
 
 
 @excutionTime
@@ -76,14 +46,14 @@ def run():
     ahora = dt.datetime.now()
 
     diferencia = dt.timedelta(
-        days=1,
+        days=0,
         hours=0,
         minutes=10
     )
     print(diferencia)
     desde = ahora - diferencia
 
-    t_desde = desde.strftime('%Y-%m-%d %H:00:00')
+    t_desde = desde.strftime('%Y-%m-%d %H:00:00')  # '2020-01-01 00:00:00'
     t_hasta = ahora.strftime('%Y-%m-%d %H:%M:%S')
     print(t_desde)
     print(t_hasta)
@@ -95,13 +65,9 @@ def run():
     print(intDay, intToday, intDay != intToday)
     if intDay != intToday:
         intHour = 0
-        t_desde = desde.strftime('%Y-%m-%d 00:00:00')
+        t_desde = desde.strftime('%Y-%m-%d 00:00:00')  # '2020-01-01 00:00:00'
 
-    # t_desde = '2020-01-01 00:00:00'
     print(intHour)
-
-    # desde = '2022-05-19'
-    # hasta = '2022-05-19'
 
     # Consulta Producción
     queryPro = '''
@@ -145,16 +111,6 @@ def run():
 
     if df_produccion.empty == False:
 
-        deleteDataToSql(
-            strCon=str_con_FDIM_Planeacion,
-            schema='fact',
-            table=DST,
-            # 'produccion',
-            where=['[FechaInt] >= {}'.format(intDay),
-                   '[Hora] >= {}'.format(intHour)
-                   ]
-        )
-
         queryEmp = '''
 
 			SELECT f.IdFinca, f.FincaCompleto, e.IdEmpresa
@@ -173,8 +129,8 @@ def run():
                                  left_on='idFinca', right_on='IdFinca')
 
         queryGeo = '''
-            SELECT [idBloque], MIN([idGeo]) [idGeo]
-            FROM  [dim].[Geografia]
+            SELECT [idBloque], MIN(idGeo) [idGeo] 
+            FROM [dim].[Geografia] 
             GROUP BY [idBloque]
         '''
 
@@ -242,6 +198,16 @@ def run():
         # df = pd.DataFrame()
         print('df Size:', df.shape)
         df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
+
+        deleteDataToSql(
+            strCon=str_con_FDIM_Planeacion,
+            schema='fact',
+            table=DST,
+            # 'produccion',
+            where=['[FechaInt] >= {}'.format(intDay),
+                   '[Hora] >= {}'.format(intHour)
+                   ]
+        )
 
         bulkInsert(
             strCon=str_con_FDIM_Planeacion,

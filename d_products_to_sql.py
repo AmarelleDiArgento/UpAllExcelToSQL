@@ -21,36 +21,6 @@ def read_conexion(name='general'):
     return (is_test, dbCon, bulk_space)
 
 
-def add_new_element(strCon, schema, table, df_new_elements,
-                    df_old_elements, column):
-
-    data = pd.DataFrame(df_new_elements[column].unique(), columns=[column])
-
-    if df_old_elements.empty == False:
-        data = pd.DataFrame(data, columns=[column])
-
-        data = data.merge(df_old_elements, on=column,
-                          how='left', indicator=True)
-        data = data[data['_merge'] == 'left_only']
-
-    if data.empty == False:
-        data = removeColumnsIn(
-            dataFrame=data,
-            listToRemove=['_merge', 'id' + column]
-        )
-        data = data.sort_values(column)
-
-        insertDataToSql_Alchemy(strCon=strCon, schema=schema,
-                                table=table, data=data, index=True)
-
-    return excecute_query(
-        strCon=strCon,
-        schema=schema,
-        table=table,
-        fields=['id' + column, column]
-    )
-
-
 # def ajustar_agrupador(x):
 #     print(x, x['Producto'], x['Maestro'])
 #     if x['Producto'].str.contains('PLANTA MADRE') == True:

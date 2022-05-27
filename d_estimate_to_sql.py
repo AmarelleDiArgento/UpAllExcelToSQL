@@ -72,7 +72,7 @@ def run():
     # print('ServFDIM', ServFDIM_DB_Planeacion, bulk_space_FDIM)
 
     ahora = dt.datetime.now()
-    dif = dt.timedelta(weeks=8)
+    dif = dt.timedelta(minutes=1)
     hasta = ahora + dif
 
     t_desde = ahora.strftime('%Y-%m-%d')
@@ -338,10 +338,10 @@ def run():
 
         bulk_path = bulk_space_FDIM + 'ts_{}.txt'.format(DST)
 
-        print(df.dtypes)
+        # print(df.dtypes)
 
-        # df = pd.DataFrame()
-        df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
+        df = pd.DataFrame()
+        # df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
 
         bulkInsert(
             strCon=str_con_FDIM_Planeacion,
