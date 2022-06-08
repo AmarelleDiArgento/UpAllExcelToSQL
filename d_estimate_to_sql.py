@@ -89,8 +89,6 @@ def run():
         ]
     )
 
-    intFecha = int(ahora.strftime('%Y%m%d'))
-
     inicio = df_fecha['IniSem'].min()
     fin = df_fecha['FinSem'].max()
 
@@ -117,20 +115,14 @@ def run():
 
         '''.format(inicio, fin)
 
+    # print(queryEst)
+
     df_estimado = excecute_query(
         strCon=str_con_DB10_FDIM,
         query=queryEst
     )
 
     if df_estimado.shape[0] > 0:
-
-        deleteDataToSql(
-            strCon=str_con_FDIM_Planeacion,
-            schema='fact',
-            table=DST,
-            where=['FechaInt >= {}'.format(intFecha)]
-
-        )
 
         queryEmp = '''
 
@@ -181,7 +173,15 @@ def run():
         df = pd.DataFrame(df,
                           columns=['Estado', 'Estimado', 'Estimado_1', 'Estimado_2', 'FechaInt',
                                    'idGrado', 'idVariedad', 'p_Gra', 'p_Nal', 'IdEmpresa', 'idGeo', 'FechaEjecucion'])
-        # df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
+        df.to_csv(bulk_path, encoding='utf-8', sep=';', index=False)
+
+        deleteDataToSql(
+            strCon=str_con_FDIM_Planeacion,
+            schema='fact',
+            table=DST,
+            where=['FechaInt >= {}'.format(intFecha)]
+
+        )
 
         bulkInsert(
             strCon=str_con_FDIM_Planeacion,

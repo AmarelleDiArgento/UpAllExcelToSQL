@@ -47,7 +47,7 @@ def run():
     hasta = ahora + dif
 
     t_desde = ahora.strftime('%Y-%m-%d')
-    # '2020-01-01'
+    t_desde = '2020-01-01'
 
     t_hasta = hasta.strftime('%Y-%m-%d')
 
@@ -62,10 +62,10 @@ def run():
         ]
     )
 
+    intFecha = int(ahora.strftime('%Y%m%d'))
+
     inicio = df_fecha['IniSem'].min()
     fin = df_fecha['FinSem'].max()
-
-    intFecha = int(inicio.strftime('%Y%m%d'))
 
     print(inicio, fin)
     exp = 0

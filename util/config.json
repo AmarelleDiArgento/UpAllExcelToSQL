@@ -11,7 +11,7 @@
 			{
 				"local": false,
 				"directory": true,
-				"dir": "P:\\",
+				"dir": "\\\\elt-fs2-fca\\Planeacion",
 				"regex": {
 					"content": "ppt_",
 					"ext": "xlsx"
@@ -35,7 +35,7 @@
 			{
 				"local": false,
 				"directory": true,
-				"dir": "P:\\",
+				"dir": "\\\\elt-fs2-fca\\Planeacion",
 				"regex": {
 					"content": "cor_",
 					"ext": "xlsx"
@@ -59,7 +59,7 @@
 			{
 				"local": false,
 				"directory": true,
-				"dir": "P:\\",
+				"dir": "\\\\elt-fs2-fca\\Planeacion",
 				"regex": {
 					"content": "nof_",
 					"ext": "xlsx"
@@ -75,7 +75,7 @@
 				"depureColumns": [
 					"IDYEAR",
 					"IDWEEK",
-					"Finca",
+					"FINCA",
 					"Origen"
 				],
 				"index": false
