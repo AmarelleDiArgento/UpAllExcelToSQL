@@ -163,7 +163,7 @@ def run():
                                  left_on='idFinca', right_on='IdFinca')
 
         queryGeo = '''
-            SELECT [idBloque], MIN([idGeo]) [idGeo]
+            SELECT [idBloque], MAX([idGeo]) [idGeo]
             FROM  [dim].[Geografia]
             GROUP BY [idBloque]
         '''
